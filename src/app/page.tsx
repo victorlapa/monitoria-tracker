@@ -1,101 +1,165 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+
+interface IEntryInfo {
+  name: string;
+  group: "A" | "B";
+  doubt: string;
+}
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [accessToken, setAccessToken] = useState("");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+  const clientSecret = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET || "";
+  const redirectUri =
+    process.env.NEXT_PUBLIC_REDIRECT_URI || "http://localhost:3000";
+
+  useEffect(() => {
+    const previousToken = window.localStorage.getItem("@gAccessToken");
+
+    if (previousToken) {
+      setAccessToken(previousToken);
+    } else {
+      const codeParams = searchParams.get("code");
+
+      fetchAccessToken(codeParams as string);
+    }
+  }, []);
+
+  const fetchAccessToken = async (code: string) => {
+    const data = {
+      client_id: clientId,
+      client_secret: clientSecret,
+      code: code,
+      redirect_uri: redirectUri,
+      grant_type: "authorization_code",
+    };
+
+    try {
+      const response = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams(data).toString(),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        const tokenResponse = result.access_token;
+
+        setAccessToken(tokenResponse);
+
+        window.localStorage.setItem("@gAccessToken", tokenResponse);
+
+        router.replace("/", { scroll: false });
+      } else {
+        console.error("Error fetching access token:", result);
+      }
+    } catch (err) {
+      console.error("Error fetching access token:", err);
+    }
+  };
+
+  const [formData, setFormData] = useState<IEntryInfo>({
+    name: "",
+    group: "A",
+    doubt: "",
+  });
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ): void => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const addEntryToSheet = async () => {
+    const { name, group, doubt } = formData;
+
+    const range = "S.O!A:D";
+
+    const data = {
+      values: [[new Date().toLocaleDateString("pt-BR"), name, group, doubt]],
+    };
+
+    const response = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${process.env.NEXT_PUBLIC_SO_SPREADSHEET_ID}/values/${range}:append?valueInputOption=RAW`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(data),
+      }
+    );
+
+    const result = await response.json();
+
+    if (response.ok) {
+      console.log("Entry successfully added:", result);
+    } else {
+      console.error("Error adding entry:", result);
+    }
+  };
+
+  return (
+    <div className="flex-col flex justify-center items-center min-h-screen bg-red-500">
+      <h1 className="text-4xl text-neutral-800">Registro Monitoria</h1>
+      <form
+        className="bg-white p-6 rounded shadow-md flex flex-col gap-2"
+        onSubmit={(e) => e.preventDefault()}
+      >
+        <input
+          type="text"
+          placeholder="Nome"
+          className="text-gray-700 px-2"
+          name="name"
+          onChange={handleChange}
+          value={formData.name}
+        />
+        <div className="flex items-center gap-2 text-neutral-700 px-2">
+          Turma:
+          <button
+            className={`transition-all rounded-full h-10 w-10 border border-red-800 flex justify-center items-center ${
+              formData.group === "A" && "bg-red-800 text-white"
+            }`}
+            onClick={() => setFormData({ ...formData, group: "A" })}
+            type="button"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <span>A</span>
+          </button>
+          <button
+            className={`transition-all rounded-full h-10 w-10 border border-red-800 flex justify-center items-center ${
+              formData.group === "B" && "bg-red-800 text-white"
+            }`}
+            onClick={() => setFormData({ ...formData, group: "B" })}
+            type="button"
           >
-            Read our docs
-          </a>
+            <span>B</span>
+          </button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+        <textarea
+          placeholder="Dúvida"
+          className="text-neutral-700 px-2"
+          name="doubt"
+          onChange={handleChange}
+          value={formData.doubt}
+        />
+        <button
+          className="bg-red-500 p-2 rounded text-white"
+          onClick={addEntryToSheet}
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          Registrar
+        </button>
+      </form>
     </div>
   );
 }
