@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { Check, LoaderCircle } from "lucide-react";
 
 interface IEntryInfo {
   name: string;
@@ -11,6 +12,8 @@ interface IEntryInfo {
 
 export default function Home() {
   const [accessToken, setAccessToken] = useState("");
+  const [isLoadingRequest, setIsLoadingRequest] = useState(false);
+  const [isSuccessRequest, setIsSuccessRequest] = useState(false);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -61,7 +64,7 @@ export default function Home() {
 
         router.replace("/", { scroll: false });
       } else {
-        console.error("Error fetching access token:", result);
+        router.push("/auth");
       }
     } catch (err) {
       console.error("Error fetching access token:", err);
@@ -81,6 +84,8 @@ export default function Home() {
   };
 
   const addEntryToSheet = async () => {
+    setIsLoadingRequest(true);
+
     const { name, group, doubt } = formData;
 
     const range = "S.O!A:D";
@@ -104,15 +109,22 @@ export default function Home() {
     const result = await response.json();
 
     if (response.ok) {
-      console.log("Entry successfully added:", result);
+      setIsSuccessRequest(true);
+      setIsLoadingRequest(false);
+
+      setInterval(() => {
+        setIsSuccessRequest(false);
+      }, 2000);
     } else {
       console.error("Error adding entry:", result);
     }
   };
 
   return (
-    <div className="flex-col flex justify-center items-center min-h-screen bg-red-500">
-      <h1 className="text-4xl text-neutral-800">Registro Monitoria</h1>
+    <div className="flex-col flex justify-center items-center min-h-screen from-red-400 to-red-800 bg-gradient-to-br">
+      <h1 className="text-4xl text-neutral-800 pb-4 font-bold">
+        Registro Monitoria
+      </h1>
       <form
         className="bg-white p-6 rounded shadow-md flex flex-col gap-2"
         onSubmit={(e) => e.preventDefault()}
@@ -153,12 +165,32 @@ export default function Home() {
           onChange={handleChange}
           value={formData.doubt}
         />
-        <button
-          className="bg-red-500 p-2 rounded text-white"
-          onClick={addEntryToSheet}
-        >
-          Registrar
-        </button>
+        {!isSuccessRequest ? (
+          <button
+            className={`transition-all bg-red-500 p-2 rounded text-white hover:bg-red-600 disabled:cursor-progress disabled:bg-neutral-600`}
+            onClick={addEntryToSheet}
+            disabled={isLoadingRequest}
+          >
+            {isLoadingRequest ? (
+              <LoaderCircle
+                color="white"
+                size={24}
+                className="animate-spin m-auto"
+              />
+            ) : (
+              "Enviar"
+            )}
+          </button>
+        ) : (
+          <button
+            className={`bg-green-500 p-2 rounded text-white`}
+            onClick={() => setIsLoadingRequest(!isLoadingRequest)}
+          >
+            <span className="flex items-center justify-center">
+              Sucesso <Check color="white" size={24} />
+            </span>
+          </button>
+        )}
       </form>
     </div>
   );
