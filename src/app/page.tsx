@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Check, LoaderCircle } from "lucide-react";
 
@@ -121,79 +121,77 @@ export default function Home() {
   };
 
   return (
-    <Suspense>
-      <div className="flex-col flex justify-center items-center min-h-screen from-red-400 to-red-800 bg-gradient-to-br">
-        <h1 className="text-4xl text-neutral-800 pb-4 font-bold">
-          Registro Monitoria
-        </h1>
-        <form
-          className="bg-white p-6 rounded shadow-md flex flex-col gap-2"
-          onSubmit={(e) => e.preventDefault()}
-        >
-          <input
-            type="text"
-            placeholder="Nome"
-            className="text-gray-700 px-2"
-            name="name"
-            onChange={handleChange}
-            value={formData.name}
-          />
-          <div className="flex items-center gap-2 text-neutral-700 px-2">
-            Turma:
-            <button
-              className={`transition-all rounded-full h-10 w-10 border border-red-800 flex justify-center items-center ${
-                formData.group === "A" && "bg-red-800 text-white"
-              }`}
-              onClick={() => setFormData({ ...formData, group: "A" })}
-              type="button"
-            >
-              <span>A</span>
-            </button>
-            <button
-              className={`transition-all rounded-full h-10 w-10 border border-red-800 flex justify-center items-center ${
-                formData.group === "B" && "bg-red-800 text-white"
-              }`}
-              onClick={() => setFormData({ ...formData, group: "B" })}
-              type="button"
-            >
-              <span>B</span>
-            </button>
-          </div>
-          <textarea
-            placeholder="Dúvida"
-            className="text-neutral-700 px-2"
-            name="doubt"
-            onChange={handleChange}
-            value={formData.doubt}
-          />
-          {!isSuccessRequest ? (
-            <button
-              className={`transition-all bg-red-500 p-2 rounded text-white hover:bg-red-600 disabled:cursor-progress disabled:bg-neutral-600`}
-              onClick={addEntryToSheet}
-              disabled={isLoadingRequest}
-            >
-              {isLoadingRequest ? (
-                <LoaderCircle
-                  color="white"
-                  size={24}
-                  className="animate-spin m-auto"
-                />
-              ) : (
-                "Enviar"
-              )}
-            </button>
-          ) : (
-            <button
-              className={`bg-green-500 p-2 rounded text-white`}
-              onClick={() => setIsLoadingRequest(!isLoadingRequest)}
-            >
-              <span className="flex items-center justify-center">
-                Sucesso <Check color="white" size={24} />
-              </span>
-            </button>
-          )}
-        </form>
-      </div>
-    </Suspense>
+    <div className="flex-col flex justify-center items-center min-h-screen from-red-400 to-red-800 bg-gradient-to-br">
+      <h1 className="text-4xl text-neutral-800 pb-4 font-bold">
+        Registro Monitoria
+      </h1>
+      <form
+        className="bg-white p-6 rounded shadow-md flex flex-col gap-2"
+        onSubmit={(e) => e.preventDefault()}
+      >
+        <input
+          type="text"
+          placeholder="Nome"
+          className="text-gray-700 px-2"
+          name="name"
+          onChange={handleChange}
+          value={formData.name}
+        />
+        <div className="flex items-center gap-2 text-neutral-700 px-2">
+          Turma:
+          <button
+            className={`transition-all rounded-full h-10 w-10 border border-red-800 flex justify-center items-center ${
+              formData.group === "A" && "bg-red-800 text-white"
+            }`}
+            onClick={() => setFormData({ ...formData, group: "A" })}
+            type="button"
+          >
+            <span>A</span>
+          </button>
+          <button
+            className={`transition-all rounded-full h-10 w-10 border border-red-800 flex justify-center items-center ${
+              formData.group === "B" && "bg-red-800 text-white"
+            }`}
+            onClick={() => setFormData({ ...formData, group: "B" })}
+            type="button"
+          >
+            <span>B</span>
+          </button>
+        </div>
+        <textarea
+          placeholder="Dúvida"
+          className="text-neutral-700 px-2"
+          name="doubt"
+          onChange={handleChange}
+          value={formData.doubt}
+        />
+        {!isSuccessRequest ? (
+          <button
+            className={`transition-all bg-red-500 p-2 rounded text-white hover:bg-red-600 disabled:cursor-progress disabled:bg-neutral-600`}
+            onClick={addEntryToSheet}
+            disabled={isLoadingRequest}
+          >
+            {isLoadingRequest ? (
+              <LoaderCircle
+                color="white"
+                size={24}
+                className="animate-spin m-auto"
+              />
+            ) : (
+              "Enviar"
+            )}
+          </button>
+        ) : (
+          <button
+            className={`bg-green-500 p-2 rounded text-white`}
+            onClick={() => setIsLoadingRequest(!isLoadingRequest)}
+          >
+            <span className="flex items-center justify-center">
+              Sucesso <Check color="white" size={24} />
+            </span>
+          </button>
+        )}
+      </form>
+    </div>
   );
 }
