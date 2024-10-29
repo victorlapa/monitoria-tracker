@@ -1,1 +1,2 @@
-Projeto desenvolvido para registrar as duvidas e mensurar uso da monitoria na disciplina de Sistemas Operacionais na Catolica de Santa Catarina - Campus Joinville
+This project was made by me while I was doing student tutoring for Operational Systems at college to keep track of how many people were being assisted
+It makes an OAuth2 connection to Google and it adds an entry to a Google Sheet when the form is submitted. 
